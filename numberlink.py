@@ -1,4 +1,4 @@
-'''NAMES OF THE AUTHOR(S): TODO'''
+'''NAMES OF THE AUTHOR(S): Alexandre Hauet & Tanguy Vaessen'''
 import time
 import sys
 from os import listdir, system
@@ -11,6 +11,7 @@ from search import *
 
 class NumberLink(Problem):
     def __init__(self, init):
+        self.grid = constructGrid(init)
         pass
 
     def goal_test(self, state):
@@ -50,6 +51,19 @@ def pathExistsDFS(grid, start, end, visited):
 
 def inBounds(grid, pos):
     return 0 <= pos[0] and pos[0] < len(grid) and 0 <= pos[1] and pos[1] < len(grid[0])
+
+def constructGrid(filename):
+    file = open(filename)
+    grid = [] #TODO initialiser le tableau correctement
+    lineNumber = 0
+    colNumber = 0
+    for line in file.readlines():
+        for character in line:
+            grid[lineNumber][colNumber] = character
+            colNumber += 1
+        colNumber = 0
+        lineNumber += 1
+    print(grid)
 
 
 #####################
