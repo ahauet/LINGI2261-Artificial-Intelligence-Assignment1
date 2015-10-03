@@ -7,11 +7,13 @@ from search import *
 
 #################
 # Problem class #
-#################
+#################^
 
 class NumberLink(Problem):
     def __init__(self, init):
-        self.grid = constructGrid(init)
+        self.grid = []
+        constructGrid(self.grid, init)
+        print(self.grid)
         pass
 
     def goal_test(self, state):
@@ -52,25 +54,20 @@ def pathExistsDFS(grid, start, end, visited):
 def inBounds(grid, pos):
     return 0 <= pos[0] and pos[0] < len(grid) and 0 <= pos[1] and pos[1] < len(grid[0])
 
-def constructGrid(filename):
+def constructGrid(grid, filename):
     file = open(filename)
-    grid = [] #TODO initialiser le tableau correctement
-    lineNumber = 0
-    colNumber = 0
     for line in file.readlines():
+        tmp = []
         for character in line:
-            grid[lineNumber][colNumber] = character
-            colNumber += 1
-        colNumber = 0
-        lineNumber += 1
-    print(grid)
-
+            if character != '\n':
+                tmp.append(character)
+        grid.append(tmp)
 
 #####################
 # Launch the search #
 #####################
 
-
+print(sys.argv[1])
 problem = NumberLink(sys.argv[1])
 # example of bfs search
 node = depth_first_graph_search(problem)
