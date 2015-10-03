@@ -3,6 +3,7 @@ import time
 import sys
 from os import listdir, system
 from search import *
+from enum import IntEnum
 
 
 #################
@@ -10,17 +11,51 @@ from search import *
 #################^
 
 class NumberLink(Problem):
-    def __init__(self, init):
-        self.grid = []
-        constructGrid(self.grid, init)
-        print(self.grid)
-        pass
+    def __init__(self, grid):
+        self.endPointsPath = constructEndPointsPathDictionnary(grid)
+        initialState = State(grid, 'A', [self.endPointsPath.get('A')[0]], self.endPointsPath.get('A')[0])
+        super().__init__(initialState)
 
     def goal_test(self, state):
-        pass
+        return False
 
     def successor(self, state):
-        pass
+        extensions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
+        for extension in extensions:
+
+            newPosition = [ state.position[0] + extension[0],
+                            state.position[1] + extension[1]]
+            newGrid = state.grid.copy()
+            try:
+                if newGrid[newPosition[0]][newPosition[1]] != '.':
+                    # this position is already used
+                    pass
+                else:
+                    newGrid[newPosition[0]][newPosition[1]] = state.letter
+            except Exception:
+                # Out of grid
+                pass
+            else:
+                # TODO should check if this is a correct successor by calling PathExist
+                newPath = state.path.copy()
+                newPath.append(newPosition)
+                yield (extension, State(newGrid, state.letter, newPath, newPosition))
+
+
+
+###############
+# State class #
+###############
+
+class State:
+    """The state class represent a state of the problem.
+        It contains a grid, the current path and the last extension
+    """
+    def __init__(self, grid: list, currentLetter, currentPath: list, lastPosition: list):
+        self.grid = grid
+        self.letter = currentLetter
+        self.path = currentPath
+        self.position = lastPosition
 
 
 ######################
@@ -54,23 +89,61 @@ def pathExistsDFS(grid, start, end, visited):
 def inBounds(grid, pos):
     return 0 <= pos[0] and pos[0] < len(grid) and 0 <= pos[1] and pos[1] < len(grid[0])
 
-def constructGrid(grid, filename):
-    file = open(filename)
-    for line in file.readlines():
-        tmp = []
-        for character in line:
-            if character != '\n':
-                tmp.append(character)
-        grid.append(tmp)
+
+def constructGrid(problemFileName):
+    """
+    Open and interpret a file as a grid
+    :rtype : a matrix representing the problem's grid
+    """
+    grid = []
+    try:
+        file = open(problemFileName)
+        for line in file.readlines():
+            tmp = []
+            for character in line:
+                if character != '\n':
+                    tmp.append(character)
+            grid.append(tmp)
+    except IOError:
+        print("File " + problemFileName + " can not be found or open")
+        exit(1)
+    else:
+        grid.reverse()  # need to reverse it to get the (0,0) at the bottom left
+        return grid
+
+
+def constructEndPointsPathDictionnary(grid):
+    """Consruct a dictionnary that associate a letter to an array of 2 points"""
+    dictionnary = {}
+    i = 0
+    j = 0
+    for line in grid:
+        for letter in line:
+            if letter != '.':
+                if dictionnary.get(letter) is None:
+                    # add the letter to the dic
+                    dictionnary[letter] = [[i, j]]
+                else:
+                    # add the coordinates to the dictionnary
+                    dictionnary.get(letter).append([i, j])
+            j += 1
+        i += 1
+        j = 0
+    return dictionnary
+
 
 #####################
 # Launch the search #
 #####################
 
-print(sys.argv[1])
-problem = NumberLink(sys.argv[1])
+grid = constructGrid(sys.argv[1])
+problem = NumberLink(grid)
+
+#for i in problem.successor(problem.initial):
+#    print(i[1].grid, i[1].letter, i[1].path, i[1].position)
+
 # example of bfs search
-node = depth_first_graph_search(problem)
+node = depth_first_tree_search(problem)
 # example of print
 path = node.path()
 path.reverse()
