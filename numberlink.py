@@ -26,29 +26,22 @@ class NumberLink(Problem):
         return True
 
     def successor(self, state):
-        extensions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
-        for extension in extensions:
-            newPosition = [ state.position[0] + extension[0],
-                            state.position[1] + extension[1]]
-            newGrid = state.grid.copy()
-            try: # need a try catch because the newPosition can be out of bound!
-                if newGrid[newPosition[0]][newPosition[1]] != '.':
-                    # this position is already used
-                    pass
-                else:
+        """ Return a generator that gives some pairs of direction ([-1,0] for example) associated with a state"""
+        for direction in directions:
+            newPosition = [state.position[0] + direction[0],
+                           state.position[1] + direction[1]]
+            if isPositionValid(grid, newPosition):
+                newGrid = [row[:] for row in state.grid]
+                if newGrid[newPosition[0]][newPosition[1]] == '.':  # if this is not a '.', the position is already used
                     newGrid[newPosition[0]][newPosition[1]] = state.letter
-                    print(state.letter)
-
-            except Exception:
-                # Out of grid
-                pass
-            else:
-                # TODO should check if this is a correct successor by calling PathExist
-                if noDeadEnd(grid, self.copyEndPointsPath):
-                    newPath = state.path.copy()
-                    newPath.append(newPosition)
-                    yield (extension, State(newGrid, state.letter, newPath, newPosition))
-
+                    #print(state.letter)
+                    if noDeadEnd(grid, self.copyEndPointsPath):
+                        newPath = state.path.copy()
+                        newPath.append(newPosition)
+                        yield (direction, State(newGrid, state.letter, newPath, newPosition))
+                    #else: not a good solution
+                #else: position already used
+            #else : out of bound
 
 
 ###############
@@ -59,11 +52,15 @@ class State:
     """The state class represent a state of the problem.
         It contains a grid, the current path and the last extension
     """
+
     def __init__(self, grid: list, currentLetter, currentPath: list, lastPosition: list):
         self.grid = grid
         self.letter = currentLetter
         self.path = currentPath
         self.position = lastPosition
+
+    def __str__(self):
+        return self.letter + " " + self.path + " " + self.position + " " + self.grid
 
 class Pair:
     def __init__(self, letter, start, end):
@@ -71,21 +68,24 @@ class Pair:
         self.start = start
         self.end = end
 
+
 ######################
 # Auxiliary function #
 ######################
 
-directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+directions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
+
+def isPositionValid(grid, position):
+    return len(grid) > 0 and len(grid[0]) > 0 and position[0] >= 0 and position[1] >= 0 and position[0] < len(grid) and position[1] < len(grid[0])
 
 def noDeadEnd(grid, points):
     """
     Check if it exist paths between all the pairs of points
     """
     for value in list(points.values()):
-        if pathExists(grid,value[0],value[1]) == False:
+        if pathExists(grid, value[0], value[1]) == False:
             return False
     return True
-
 
 
 def pathExists(grid, start, end):
@@ -154,21 +154,25 @@ def constructEndPointsPathDictionnary(grid):
         j = 0
     return dictionnary
 
-def getNextPoints(dico) :
+
+def getNextPoints(dico):
     keys = list(dico.keys())
     i = 0
     result = Pair(keys[i], dico.__getitem__(keys[i])[0], dico.__getitem__(keys[i])[1])
     i = i + 1
     while i < len(keys):
         tmp = Pair(keys[i], dico.__getitem__(keys[i])[0], dico.__getitem__(keys[i])[1])
-        if abs(result.start[0] - result.end[0]) + abs(result.start[1] - result.end[1]) < abs(tmp.start[0] - tmp.end[0]) + abs(tmp.start[1] - tmp.end[1]):
+        if abs(result.start[0] - result.end[0]) + abs(result.start[1] - result.end[1]) < abs(
+                        tmp.start[0] - tmp.end[0]) + abs(tmp.start[1] - tmp.end[1]):
             result = tmp
         i = i + 1
     del dico[result.letter]
     return result
 
+
 def abs(n):
-    return (n,-n)[n<0]
+    return (n, -n)[n < 0]
+
 
 #####################
 # Launch the search #
@@ -177,8 +181,11 @@ def abs(n):
 grid = constructGrid(sys.argv[1])
 problem = NumberLink(grid)
 
-#for i in problem.successor(problem.initial):
-#    print(i[1].grid, i[1].letter, i[1].path, i[1].position)
+print(problem.initial.letter)
+print(problem.initial.position)
+for pair in problem.successor(problem.initial):
+    print(pair[0], pair[1].grid)
+exit(0)
 
 # example of bfs search
 node = depth_first_tree_search(problem)
