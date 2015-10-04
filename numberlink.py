@@ -13,11 +13,11 @@ from enum import IntEnum
 class NumberLink(Problem):
     def __init__(self, grid):
         self.endPointsPath = constructEndPointsPathDictionnary(grid)
-        initialState = State(grid, 'A', [self.endPointsPath.get('A')[0]], self.endPointsPath.get('A')[0])
+        initialState = getNextPoints(self.endPointsPath, grid)
         super().__init__(initialState)
 
     def goal_test(self, state):
-        return False
+        return state.position == state.end
 
     def successor(self, state):
         extensions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
@@ -51,12 +51,16 @@ class State:
     """The state class represent a state of the problem.
         It contains a grid, the current path and the last extension
     """
-    def __init__(self, grid: list, currentLetter, currentPath: list, lastPosition: list):
+    def __init__(self, grid: list, currentLetter, start, end):
         self.grid = grid
         self.letter = currentLetter
-        self.path = currentPath
-        self.position = lastPosition
+        self.start = start
+        self.end = end
+        self.path = [start]
+        self.position = []
 
+    def _print_(self):
+        print(self.letter, self.start, self.end)
 
 ######################
 # Auxiliary function #
@@ -131,6 +135,21 @@ def constructEndPointsPathDictionnary(grid):
         j = 0
     return dictionnary
 
+def getNextPoints(dico, grid) :
+    keys = list(dico.keys())
+    i = 0
+    result = State(grid, keys[i], dico.__getitem__(keys[i])[0], dico.__getitem__(keys[i])[1])
+    i = i + 1
+    while i < len(keys):
+        tmp = State(grid, keys[i], dico.__getitem__(keys[i])[0], dico.__getitem__(keys[i])[1])
+        if abs(result.start[0] - result.end[0]) + abs(result.start[1] - result.end[1]) < abs(tmp.start[0] - tmp.end[0]) + abs(tmp.start[1] - tmp.end[1]):
+            result = tmp
+        i = i + 1
+    del dico[result.letter]
+    return result
+
+def abs(n):
+    return (n,-n)[n<0]
 
 #####################
 # Launch the search #
