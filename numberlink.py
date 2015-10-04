@@ -100,6 +100,7 @@ class Pair:
 ######################
 
 directions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
+#directions = ([-1, 0], [1, 0], [0, -1], [0, 1])  # Down, Up, Left, Right
 
 def isPathCompleted(state):
     """Check if the path is completed"""
