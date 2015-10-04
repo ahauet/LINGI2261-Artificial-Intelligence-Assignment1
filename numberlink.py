@@ -17,7 +17,11 @@ class NumberLink(Problem):
         super().__init__(initialState)
 
     def goal_test(self, state):
-        return state.position == state.end
+        for line in state.grid:
+            for letter in line:
+                if letter == '.':
+                    return False
+        return True
 
     def successor(self, state):
         extensions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
@@ -26,7 +30,7 @@ class NumberLink(Problem):
             newPosition = [ state.position[0] + extension[0],
                             state.position[1] + extension[1]]
             newGrid = state.grid.copy()
-            try:
+            try: # need a try catch because the newPosition can be out of bound!
                 if newGrid[newPosition[0]][newPosition[1]] != '.':
                     # this position is already used
                     pass
