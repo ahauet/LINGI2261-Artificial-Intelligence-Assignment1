@@ -4,6 +4,7 @@ import sys
 from os import listdir, system
 from search import *
 from enum import IntEnum
+import copy
 
 
 #################
@@ -13,9 +14,9 @@ from enum import IntEnum
 class NumberLink(Problem):
     def __init__(self, grid):
         self.endPointsPath = constructEndPointsPathDictionnary(grid)
-        self.copyEndPointsPath = self.endPointsPath
+        self.copyEndPointsPath = copy.deepcopy(self.endPointsPath)
         firstPoint = getNextPoints(self.endPointsPath)
-        initialState = State(grid, firstPoint.letter, [firstPoint.start], firstPoint.start)
+        initialState = State(grid, firstPoint.letter, [firstPoint.start], firstPoint.end)
         super().__init__(initialState)
 
     def goal_test(self, state):
@@ -27,22 +28,39 @@ class NumberLink(Problem):
 
     def successor(self, state):
         """ Return a generator that gives some pairs of direction ([-1,0] for example) associated with a state"""
+        pathCompleted = False
         for direction in directions:
-            newPosition = [state.position[0] + direction[0],
-                           state.position[1] + direction[1]]
-            if isPositionValid(grid, newPosition):
-                newGrid = [row[:] for row in state.grid]
-                if newGrid[newPosition[0]][newPosition[1]] == '.':  # if this is not a '.', the position is already used
-                    newGrid[newPosition[0]][newPosition[1]] = state.letter
-                    #print(state.letter)
-                    if noDeadEnd(grid, self.copyEndPointsPath):
+            if not pathCompleted:
+                newPosition = [state.path[-1][0] + direction[0],
+                               state.path[-1][1] + direction[1]]
+                if inBounds(grid, newPosition):
+                    newGrid = [row[:] for row in state.grid]
+                    if newGrid[newPosition[0]][newPosition[1]] == '.':  # if this is not a '.', the position is already used
+                        newGrid[newPosition[0]][newPosition[1]] = state.letter
+                        #print(state.letter)
                         newPath = state.path.copy()
                         newPath.append(newPosition)
-                        yield (direction, State(newGrid, state.letter, newPath, newPosition))
-                    #else: not a good solution
-                #else: position already used
-            #else : out of bound
+                        newState = State(newGrid, state.letter, newPath, state.endPoint)
+                        if noDeadEndWithState(newGrid, self.endPointsPath, newState):
+                            if isPathCompleted(newState):
+                                pathCompleted = True
+                                yield (direction, self.startNewPath(newState))
+                            else:
+                                yield (direction, newState)
+                        # else: not a good solution
+                    # else: position already used
+                # else : out of bound
 
+        # if state.endPoint[0] == state.path[-1][0] and state.endPoint[1] == state.path[-1][1]:
+        #     #then the path is completed
+        #     #remove the letter from the dictionnary
+        #     return self.startnewPath(state)
+
+    def startNewPath(self, state):
+        del self.endPointsPath[state.letter]
+        nextPoint = getNextPoints(self.endPointsPath)
+        if not nextPoint: return state
+        return State(state.grid, nextPoint.letter, [nextPoint.start], nextPoint.end)
 
 ###############
 # State class #
@@ -53,11 +71,11 @@ class State:
         It contains a grid, the current path and the last extension
     """
 
-    def __init__(self, grid: list, currentLetter, currentPath: list, lastPosition: list):
+    def __init__(self, grid: list, currentLetter, currentPath: list, endPoint):
         self.grid = grid
         self.letter = currentLetter
         self.path = currentPath
-        self.position = lastPosition
+        self.endPoint = endPoint
 
     def __str__(self):
         output = ""
@@ -66,6 +84,7 @@ class State:
                 output += letter
             output += '\n'
         return output
+
 
 class Pair:
     def __init__(self, letter, start, end):
@@ -80,12 +99,29 @@ class Pair:
 
 directions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
 
-def isPositionValid(grid, position):
-    return len(grid) > 0 and len(grid[0]) > 0 and position[0] >= 0 and position[1] >= 0 and position[0] < len(grid) and position[1] < len(grid[0])
+def isPathCompleted(state):
+    """Check if the path is completed"""
+    for direction in directions:
+        newPosition = [state.path[-1][0] + direction[0],
+                       state.path[-1][1] + direction[1]]
+        if newPosition[0] == state.endPoint[0] and newPosition[1] == state.endPoint[1]:
+            return True
+    return False
+
+
+def noDeadEndWithState(grid, points, state):
+    """Check if it exists paths between all the pairs of points, considering the fact that the current state has some other coordinates"""
+    newPoints = copy.deepcopy(points)
+    if state.path[0] == newPoints[state.letter][0]:
+        newPoints[state.letter][0] = state.path[-1]
+    else:
+        newPoints[state.letter][1] = state.path[-1]
+    return noDeadEnd(grid, newPoints)
+
 
 def noDeadEnd(grid, points):
     """
-    Check if it exist paths between all the pairs of points
+    Check if it exists paths between all the pairs of points
     """
     for value in list(points.values()):
         if pathExists(grid, value[0], value[1]) == False:
@@ -115,6 +151,7 @@ def pathExistsDFS(grid, start, end, visited):
 
 
 def inBounds(grid, pos):
+    """Check if a position is inside the bounds of a grid"""
     return 0 <= pos[0] and pos[0] < len(grid) and 0 <= pos[1] and pos[1] < len(grid[0])
 
 
@@ -162,6 +199,7 @@ def constructEndPointsPathDictionnary(grid):
 
 def getNextPoints(dico):
     keys = list(dico.keys())
+    if len(keys) == 0 : return None
     i = 0
     result = Pair(keys[i], dico.__getitem__(keys[i])[0], dico.__getitem__(keys[i])[1])
     i = i + 1
@@ -171,7 +209,7 @@ def getNextPoints(dico):
                         tmp.start[0] - tmp.end[0]) + abs(tmp.start[1] - tmp.end[1]):
             result = tmp
         i = i + 1
-    del dico[result.letter]
+    #del dico[result.letter] #move this line at the end of the successor method, when the path is completed
     return result
 
 
@@ -183,14 +221,15 @@ def abs(n):
 # Launch the search #
 #####################
 
+if len(sys.argv) < 2: print("usage: numberlink.py inputFile"); exit(2)
 grid = constructGrid(sys.argv[1])
 problem = NumberLink(grid)
 
-#print(problem.initial.letter)
-#print(problem.initial.position)
-#for pair in problem.successor(problem.initial):
+# print(problem.initial.letter)
+# print(problem.initial.position)
+# for pair in problem.successor(problem.initial):
 #    print(pair[0], pair[1].grid)
-#exit(0)
+# exit(0)
 
 # example of bfs search
 node = depth_first_tree_search(problem)
