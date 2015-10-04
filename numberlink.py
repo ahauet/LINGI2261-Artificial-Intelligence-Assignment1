@@ -59,10 +59,6 @@ class State:
     """The state class represent a state of the problem.
         It contains a grid, the current path and the last extension
     """
-class State:
-    """The state class represent a state of the problem.
-        It contains a grid, the current path and the last extension
-    """
     def __init__(self, grid: list, currentLetter, currentPath: list, lastPosition: list):
         self.grid = grid
         self.letter = currentLetter
