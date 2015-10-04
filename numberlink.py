@@ -60,7 +60,12 @@ class State:
         self.position = lastPosition
 
     def __str__(self):
-        return self.letter + " " + self.path + " " + self.position + " " + self.grid
+        output = ""
+        for line in self.grid:
+            for letter in line:
+                output += letter
+            output += '\n'
+        return output
 
 class Pair:
     def __init__(self, letter, start, end):
@@ -181,11 +186,11 @@ def abs(n):
 grid = constructGrid(sys.argv[1])
 problem = NumberLink(grid)
 
-print(problem.initial.letter)
-print(problem.initial.position)
-for pair in problem.successor(problem.initial):
-    print(pair[0], pair[1].grid)
-exit(0)
+#print(problem.initial.letter)
+#print(problem.initial.position)
+#for pair in problem.successor(problem.initial):
+#    print(pair[0], pair[1].grid)
+#exit(0)
 
 # example of bfs search
 node = depth_first_tree_search(problem)
