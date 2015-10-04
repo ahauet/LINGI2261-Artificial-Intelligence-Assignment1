@@ -16,7 +16,7 @@ class NumberLink(Problem):
         self.endPointsPath = constructEndPointsPathDictionnary(grid)
         self.copyEndPointsPath = copy.deepcopy(self.endPointsPath)
         firstPoint = getNextPoints(self.endPointsPath)
-        initialState = State(grid, firstPoint.letter, [firstPoint.start], firstPoint.end)
+        initialState = State(grid, firstPoint.letter, [firstPoint.start], firstPoint.end, copy.copy(self.endPointsPath))
         super().__init__(initialState)
 
     def goal_test(self, state):
@@ -40,8 +40,8 @@ class NumberLink(Problem):
                         #print(state.letter)
                         newPath = state.path.copy()
                         newPath.append(newPosition)
-                        newState = State(newGrid, state.letter, newPath, state.endPoint)
-                        if noDeadEndWithState(newGrid, self.endPointsPath, newState):
+                        newState = State(newGrid, state.letter, newPath, state.endPoint, copy.copy(state.endPoints))
+                        if noDeadEndWithState(newGrid, state.endPoints, newState):
                             if isPathCompleted(newState):
                                 pathCompleted = True
                                 yield (direction, self.startNewPath(newState))
@@ -57,10 +57,11 @@ class NumberLink(Problem):
         #     return self.startnewPath(state)
 
     def startNewPath(self, state):
-        del self.endPointsPath[state.letter]
-        nextPoint = getNextPoints(self.endPointsPath)
+        newEndPoints = copy.copy(state.endPoints)
+        del newEndPoints[state.letter]
+        nextPoint = getNextPoints(newEndPoints)
         if not nextPoint: return state
-        return State(state.grid, nextPoint.letter, [nextPoint.start], nextPoint.end)
+        return State(state.grid, nextPoint.letter, [nextPoint.start], nextPoint.end, newEndPoints)
 
 ###############
 # State class #
@@ -71,11 +72,12 @@ class State:
         It contains a grid, the current path and the last extension
     """
 
-    def __init__(self, grid: list, currentLetter, currentPath: list, endPoint):
+    def __init__(self, grid: list, currentLetter, currentPath: list, endPoint, endPoints):
         self.grid = grid
         self.letter = currentLetter
         self.path = currentPath
         self.endPoint = endPoint
+        self.endPoints = endPoints
 
     def __str__(self):
         output = ""
@@ -173,7 +175,7 @@ def constructGrid(problemFileName):
         print("File " + problemFileName + " can not be found or open")
         exit(1)
     else:
-        grid.reverse()  # need to reverse it to get the (0,0) at the bottom left
+        #grid.reverse()  # need to reverse it to get the (0,0) at the bottom left
         return grid
 
 
