@@ -204,15 +204,20 @@ def getNextPoints(dico):
     keys = list(dico.keys())
     if len(keys) == 0 : return None
     i = 0
-    result = Pair(keys[i], dico.__getitem__(keys[i])[0], dico.__getitem__(keys[i])[1])
+    result = Pair(keys[i], dico.__getitem__(keys[i])[1], dico.__getitem__(keys[i])[0])
     i = i + 1
     while i < len(keys):
-        tmp = Pair(keys[i], dico.__getitem__(keys[i])[0], dico.__getitem__(keys[i])[1])
-        if abs(result.start[0] - result.end[0]) + abs(result.start[1] - result.end[1]) < abs(
-                        tmp.start[0] - tmp.end[0]) + abs(tmp.start[1] - tmp.end[1]):
+        tmp = Pair(keys[i], dico.__getitem__(keys[i])[1], dico.__getitem__(keys[i])[0])
+        a = abs(result.start[0] - result.end[0]) + abs(result.start[1] - result.end[1])
+        b = abs(tmp.start[0] - tmp.end[0]) + abs(tmp.start[1] - tmp.end[1])
+        if a < b:
             result = tmp
+        elif a == b :
+            if tmp.start[1] > result.start[1]:
+                result = tmp
+            elif tmp.start[0] > result.start[0]:
+                result = tmp
         i = i + 1
-    #del dico[result.letter] #move this line at the end of the successor method, when the path is completed
     return result
 
 
