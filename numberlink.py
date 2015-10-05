@@ -20,6 +20,8 @@ class NumberLink(Problem):
         initialState = State(grid, firstPoint.letter, [firstPoint.start], firstPoint.end, copy.copy(self.endPointsPath))
         super().__init__(initialState)
 
+        self.dico = {}
+
     def goal_test(self, state):
         for line in state.grid:
             for letter in line:
@@ -45,13 +47,17 @@ class NumberLink(Problem):
                         newState = State(newGrid, state.letter, newPath, state.endPoint, copy.copy(state.endPoints))
                         if noDeadEndWithState(newGrid, state.endPoints, newState):
                             print(newState)
-                            if isPathCompleted(newState):
-                                pathCompleted = True
-                                yield (direction, self.startNewPath(newState))
-                            else:
-                                #print(newState.letter)
-                                #print(newPosition)
-                                yield (direction, newState)
+                            if not str(newPosition) in self.dico: self.dico[str(newPosition)] = 1
+                            else : self.dico[str(newPosition)] = self.dico[str(newPosition)] + 1
+                            if self.dico[str(newPosition)] <= 10:
+                                if isPathCompleted(newState):
+                                    pathCompleted = True
+                                    self.dico = {}
+                                    yield (direction, self.startNewPath(newState))
+                                else:
+                                    #print(newState.letter)
+                                    #print(newPosition)
+                                    yield (direction, newState)
                         # else: not a good solution
                     # else: position already used
                 # else : out of bound
