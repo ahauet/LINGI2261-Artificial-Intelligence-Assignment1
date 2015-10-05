@@ -20,11 +20,12 @@ class NumberLink(Problem):
         super().__init__(initialState)
 
     def goal_test(self, state):
-        for line in state.grid:
-            for letter in line:
-                if letter == '.':
-                    return False
-        return True
+        # for line in state.grid:
+        #     for letter in line:
+        #         if letter == '.':
+        #             return False
+        # return True
+        return len(state.endPoints) == 0
 
     def successor(self, state):
         """ Return a generator that gives some pairs of direction ([-1,0] for example) associated with a state"""
@@ -46,6 +47,8 @@ class NumberLink(Problem):
                                 pathCompleted = True
                                 yield (direction, self.startNewPath(newState))
                             else:
+                                #print(newState.letter)
+                                #print(newPosition)
                                 yield (direction, newState)
                         # else: not a good solution
                     # else: position already used
@@ -60,7 +63,7 @@ class NumberLink(Problem):
         newEndPoints = copy.copy(state.endPoints)
         del newEndPoints[state.letter]
         nextPoint = getNextPoints(newEndPoints)
-        if not nextPoint: return state
+        if not nextPoint: state.endPoints = newEndPoints; return state
         return State(state.grid, nextPoint.letter, [nextPoint.start], nextPoint.end, newEndPoints)
 
 ###############
