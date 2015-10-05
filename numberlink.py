@@ -40,10 +40,11 @@ class NumberLink(Problem):
                     if newGrid[newPosition[0]][newPosition[1]] == '.':  # if this is not a '.', the position is already used
                         newGrid[newPosition[0]][newPosition[1]] = state.letter
                         #print(state.letter)
-                        newPath = state.path.copy()
+                        newPath = copy.copy(state.path)
                         newPath.append(newPosition)
                         newState = State(newGrid, state.letter, newPath, state.endPoint, copy.copy(state.endPoints))
                         if noDeadEndWithState(newGrid, state.endPoints, newState):
+                            print(newState)
                             if isPathCompleted(newState):
                                 pathCompleted = True
                                 yield (direction, self.startNewPath(newState))
@@ -118,12 +119,25 @@ def isPathCompleted(state):
 
 def noDeadEndWithState(grid, points, state):
     """Check if it exists paths between all the pairs of points, considering the fact that the current state has some other coordinates"""
-    newPoints = copy.deepcopy(points)
-    if state.path[0] == newPoints[state.letter][0]:
-        newPoints[state.letter][0] = state.path[-1]
+    # newPoints = copy.deepcopy(points)
+    # if state.path[0] == newPoints[state.letter][0]:
+    #     newPoints[state.letter][0] = state.path[-1]
+    # else:
+    #     newPoints[state.letter][1] = state.path[-1]
+    # return noDeadEnd(grid, newPoints)
+
+    if state.path[0] == points[state.letter][0]:
+        backup = points[state.letter][0]
+        points[state.letter][0] = state.path[-1]
+        result = noDeadEnd(grid, points)
+        points[state.letter][0] = backup
+        return result
     else:
-        newPoints[state.letter][1] = state.path[-1]
-    return noDeadEnd(grid, newPoints)
+        backup = points[state.letter][1]
+        points[state.letter][1] = state.path[-1]
+        result = noDeadEnd(grid,points)
+        points[state.letter][1] = backup
+        return result
 
 
 def noDeadEnd(grid, points):
