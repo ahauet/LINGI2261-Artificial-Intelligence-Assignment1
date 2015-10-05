@@ -38,29 +38,30 @@ class NumberLink(Problem):
                 newPosition = [state.path[-1][0] + direction[0],
                                state.path[-1][1] + direction[1]]
                 if inBounds(grid, newPosition):
-                    newGrid = [row[:] for row in state.grid]
-                    if newGrid[newPosition[0]][newPosition[1]] == '.':  # if this is not a '.', the position is already used
-                        newGrid[newPosition[0]][newPosition[1]] = state.letter
-                        #print(state.letter)
-                        newPath = copy.copy(state.path)
-                        newPath.append(newPosition)
-                        newState = State(newGrid, state.letter, newPath, state.endPoint, copy.copy(state.endPoints))
-                        if noDeadEndWithState(newGrid, state.endPoints, newState):
-                            print(newState)
-                            if not str(newPosition) in self.dico: self.dico[str(newPosition)] = 1
-                            else : self.dico[str(newPosition)] = self.dico[str(newPosition)] + 1
-                            if self.dico[str(newPosition)] <= 10:
-                                if isPathCompleted(newState):
-                                    pathCompleted = True
-                                    self.dico = {}
-                                    yield (direction, self.startNewPath(newState))
-                                else:
-                                    #print(newState.letter)
-                                    #print(newPosition)
-                                    yield (direction, newState)
-                        # else: not a good solution
-                    # else: position already used
-                # else : out of bound
+                    if hasTwoNeighboorMax(grid, state.letter, newPosition):
+                        newGrid = [row[:] for row in state.grid]
+                        if newGrid[newPosition[0]][newPosition[1]] == '.':  # if this is not a '.', the position is already used
+                            newGrid[newPosition[0]][newPosition[1]] = state.letter
+                            #print(state.letter)
+                            newPath = copy.copy(state.path)
+                            newPath.append(newPosition)
+                            newState = State(newGrid, state.letter, newPath, state.endPoint, copy.copy(state.endPoints))
+                            if noDeadEndWithState(newGrid, state.endPoints, newState):
+                                #print(newState)
+                                if not str(newPosition) in self.dico: self.dico[str(newPosition)] = 1
+                                else : self.dico[str(newPosition)] = self.dico[str(newPosition)] + 1
+                                if self.dico[str(newPosition)] <= 25:
+                                    if isPathCompleted(newState):
+                                        pathCompleted = True
+                                        self.dico = {}
+                                        yield (direction, self.startNewPath(newState))
+                                    else:
+                                        #print(newState.letter)
+                                        #print(newPosition)
+                                        yield (direction, newState)
+                                # else: not a good solution
+                            # else: position already used
+                        # else : out of bound
 
         # if state.endPoint[0] == state.path[-1][0] and state.endPoint[1] == state.path[-1][1]:
         #     #then the path is completed
@@ -112,6 +113,19 @@ class Pair:
 
 directions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
 #directions = ([-1, 0], [1, 0], [0, -1], [0, 1])  # Down, Up, Left, Right
+
+
+def hasTwoNeighboorMax(grid, letter, position):
+    directions8 = ([0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [1, 1], [-1,-1], [-1, 1])
+    numberOfLetter = 0
+    for direction in directions8:
+        newPosition = [position[0] + direction[0],
+                       position[1] + direction[1]]
+        if inBounds(grid, newPosition):
+            if grid[newPosition[0]][newPosition[1]] == letter:
+                numberOfLetter += 1
+    return numberOfLetter <= 2
+
 
 def isPathCompleted(state):
     """Check if the path is completed"""
