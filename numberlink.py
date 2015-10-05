@@ -5,6 +5,7 @@ from os import listdir, system
 from search import *
 from enum import IntEnum
 import copy
+import time
 
 
 #################
@@ -20,12 +21,12 @@ class NumberLink(Problem):
         super().__init__(initialState)
 
     def goal_test(self, state):
-        # for line in state.grid:
-        #     for letter in line:
-        #         if letter == '.':
-        #             return False
-        # return True
-        return len(state.endPoints) == 0
+        for line in state.grid:
+            for letter in line:
+                if letter == '.':
+                    return False
+        return True
+        # return len(state.endPoints) == 0
 
     def successor(self, state):
         """ Return a generator that gives some pairs of direction ([-1,0] for example) associated with a state"""
@@ -213,7 +214,7 @@ def getNextPoints(dico):
         tmp = Pair(keys[i], dico.__getitem__(keys[i])[1], dico.__getitem__(keys[i])[0])
         a = abs(result.start[0] - result.end[0]) + abs(result.start[1] - result.end[1])
         b = abs(tmp.start[0] - tmp.end[0]) + abs(tmp.start[1] - tmp.end[1])
-        if a < b:
+        if a > b:
             result = tmp
         elif a == b :
             if tmp.start[1] > result.start[1]:
@@ -232,6 +233,8 @@ def abs(n):
 # Launch the search #
 #####################
 
+start_time = time.time()
+
 if len(sys.argv) < 2: print("usage: numberlink.py inputFile"); exit(2)
 grid = constructGrid(sys.argv[1])
 problem = NumberLink(grid)
@@ -249,3 +252,5 @@ path = node.path()
 path.reverse()
 for n in path:
     print(n.state)  # assuming that the __str__ function of states output the correct format
+
+print("--- %s seconds ---" % (time.time() - start_time))
