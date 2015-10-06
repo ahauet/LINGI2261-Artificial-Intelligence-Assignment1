@@ -46,11 +46,11 @@ class NumberLink(Problem):
                             newPath = copy.copy(state.path)
                             newPath.append(newPosition)
                             newState = State(newGrid, state.letter, newPath, state.endPoint, copy.copy(state.endPoints))
-                            if noDeadEndWithState(newGrid, state.endPoints, newState):
+                            if noDeadEndWithState(newGrid, state.endPoints, newState)and hasNoLonelyPoint(newGrid, state.letter, state.endPoints):
                                 #print(newState)
                                 if not str(newPosition) in self.dico: self.dico[str(newPosition)] = 1
                                 else : self.dico[str(newPosition)] = self.dico[str(newPosition)] + 1
-                                if self.dico[str(newPosition)] <= 25:
+                                if self.dico[str(newPosition)] <= 100:
                                     if isPathCompleted(newState):
                                         pathCompleted = True
                                         self.dico = {}
@@ -113,11 +113,59 @@ class Pair:
 
 directions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
 #directions = ([-1, 0], [1, 0], [0, -1], [0, 1])  # Down, Up, Left, Right
+directions8 = ([0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [1, 1], [-1,-1], [-1, 1])
+
+
+def hasNoLonelyPoint(grid, ltr, dico):
+    # for direction in directions:
+    #     result = True
+    #     newPosition = [position[0] + direction[0],
+    #                    position[1] + direction[1]]
+    #     if inBounds(grid, newPosition) and grid[newPosition[0]][newPosition[1]] == '.':
+    #         lonelyPoint = True
+    #         for dir in directions8:
+    #             newPos = [newPosition[0] + dir[0],
+    #                       newPosition[1] + dir[1]]
+    #             if inBounds(grid, newPos) and (newPos[0] != position[0] and newPos[1] != position[1]):
+    #                 if grid[newPos[0]][newPos[1]] == '.':
+    #                     lonelyPoint = False
+    #         result = result and not lonelyPoint
+    # return result
+    noLonelyPoints = True
+    i = 0
+    nbrPoints = 0
+    for line in grid:
+        j = 0
+        for letter in line:
+            if letter == '.':
+                nbrPoints += 1
+                lonelyPoint = True
+                point = [i, j]
+                for direction in directions8:
+                    newPosition = [point[0] + direction[0],
+                                    point[1] + direction[1]]
+                    if inBounds(grid, newPosition) and grid[newPosition[0]][newPosition[1]] == '.':
+                        lonelyPoint = False
+                        break
+                if lonelyPoint:
+                    for direction in directions:
+                        posToCheck = [point[0] + direction[0],
+                                       point[1] + direction[1]]
+                        if inBounds(grid, posToCheck):
+                            for value in dico[ltr]:
+                                if posToCheck[0] == value[0] and posToCheck[1] == value[1]:
+                                    lonelyPoint = False
+                noLonelyPoints = noLonelyPoints and not lonelyPoint
+                if not noLonelyPoints: break
+            j += 1
+        i += 1
+    if not noLonelyPoints and nbrPoints == 1:
+        return True
+    else: return noLonelyPoints
+
 
 
 def hasTwoNeighboorMax(grid, letter, position):
-    directions8 = ([0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [1, 1], [-1,-1], [-1, 1])
-
     subSquarre1 = ([0, -1], [-1, 0], [-1,-1])  # Left, Down, Both
     subSquarre2 = ([0,  1], [-1, 0], [-1, 1])  # Right, Down, Both
     subSquarre3 = ([0, -1], [1 , 0], [1, -1])  # Left, Up, Both
