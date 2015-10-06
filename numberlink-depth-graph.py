@@ -21,6 +21,7 @@ class NumberLink(Problem):
         super().__init__(initialState)
 
         self.dico = {}
+        self.nbrExploredNodes = 0
 
     def goal_test(self, state):
         """A problem is solved if there are no more points in the grid"""
@@ -60,8 +61,10 @@ class NumberLink(Problem):
                                     if isPathCompleted(newState):
                                         pathCompleted = True
                                         self.dico = {}
+                                        self.nbrExploredNodes += 1
                                         yield (direction, self.startNewPath(newState))
                                     else:
+                                        self.nbrExploredNodes += 1
                                         yield (direction, newState)
                                 # else: not a good solution
                             # else: position already used
@@ -348,3 +351,5 @@ for n in path:
     print(n.state)  # assuming that the __str__ function of states output the correct format
 
 print("--- %s seconds ---" % (time.time() - start_time))
+print("--- %s nodes explored ---" % problem.nbrExploredNodes)
+print("--- %s steps from root to solution ---" % (len(path) -1) )
