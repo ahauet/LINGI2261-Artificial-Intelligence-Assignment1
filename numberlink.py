@@ -38,9 +38,9 @@ class NumberLink(Problem):
                 newPosition = [state.path[-1][0] + direction[0],
                                state.path[-1][1] + direction[1]]
                 if inBounds(grid, newPosition):
-                    if hasTwoNeighboorMax(grid, state.letter, newPosition):
-                        newGrid = [row[:] for row in state.grid]
-                        if newGrid[newPosition[0]][newPosition[1]] == '.':  # if this is not a '.', the position is already used
+                    if state.grid[newPosition[0]][newPosition[1]] == '.':  # if this is not a '.', the position is already used
+                        if hasTwoNeighboorMax(state.grid, state.letter, newPosition):
+                            newGrid = [row[:] for row in state.grid]
                             newGrid[newPosition[0]][newPosition[1]] = state.letter
                             #print(state.letter)
                             newPath = copy.copy(state.path)
@@ -117,6 +117,16 @@ directions = ([0, -1], [0, 1], [1, 0], [-1, 0])  # Left, Right, Up, Down
 
 def hasTwoNeighboorMax(grid, letter, position):
     directions8 = ([0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [1, 1], [-1,-1], [-1, 1])
+
+    subSquarre1 = ([0, -1], [-1, 0], [-1,-1])  # Left, Down, Both
+    subSquarre2 = ([0,  1], [-1, 0], [-1, 1])  # Right, Down, Both
+    subSquarre3 = ([0, -1], [1 , 0], [1, -1])  # Left, Up, Both
+    subSquarre4 = ([0,  1], [1 , 0], [1,  1])  # Right, Up, Both
+
+    subSquarres = [subSquarre1, subSquarre2, subSquarre3, subSquarre4]
+
+    result = True
+
     numberOfLetter = 0
     for direction in directions8:
         newPosition = [position[0] + direction[0],
@@ -124,8 +134,18 @@ def hasTwoNeighboorMax(grid, letter, position):
         if inBounds(grid, newPosition):
             if grid[newPosition[0]][newPosition[1]] == letter:
                 numberOfLetter += 1
-    return numberOfLetter <= 2
+    result = numberOfLetter <= 3 #dans le "grand" carré de 3*3, on autorise 3 voisins avec la même lettre
 
+    for subSquarre in subSquarres:
+        numberOfLetter = 0
+        for direction in subSquarre:
+            newPosition = [position[0] + direction[0],
+                           position[1] + direction[1]]
+            if inBounds(grid, newPosition):
+                if grid[newPosition[0]][newPosition[1]] == letter:
+                    numberOfLetter += 1
+        result = result and (numberOfLetter <= 2) # dans les sous carrés de 2*2, on autorise maximum 2 lettres identiques à celle qu'on ajoute
+    return result
 
 def isPathCompleted(state):
     """Check if the path is completed"""
