@@ -340,7 +340,7 @@ problem = NumberLink(grid)
 # exit(0)
 
 # example of bfs search
-node = depth_first_tree_search(problem)
+node = breadth_first_graph_search(problem)
 # example of print
 path = node.path()
 path.reverse()
